@@ -10,7 +10,7 @@ Data Science Internship @ Thiranex — a 4-week end-to-end data science project 
 
 - [x] Week 1: Data Cleaning & Visualization
 - [x] Week 2: Topic Classification Model
-- [ ] Week 3: Exploratory Data Analysis
+- [x] Week 3: Exploratory Data Analysis
 - [ ] Week 4: Streamlit Dashboard
 
 ## Week 1 — Data Cleaning & Visualization
@@ -46,5 +46,19 @@ I split the data into 80% train / 20% test *before* vectorizing, and fit the vec
 Logistic Regression performed best, likely because it combines all 36,925 (mostly sparse) features into one weighted decision per category, rather than relying on one feature at a time (Random Forest) or assuming word independence (Naive Bayes) — both of which struggle more with sparse, high-dimensional text data.
 
 **Evaluation:** Beyond accuracy, I built a confusion matrix (33×33, one row/column per category) for each model to see *where* errors were happening, not just how many. Logistic Regression's errors were fairly spread out across categories. Naive Bayes showed a clear bias toward over-predicting a few high-frequency categories (e.g. `POLITICS`, `WELLNESS`) regardless of the article's true category — consistent with its independence assumption breaking down on related word pairs (e.g. "stock market", "prime minister") that carry more meaning together than apart.
+
+**Files:** `ThiranexDataScience.ipynb`
+
+## Week 3 — Exploratory Data Analysis
+
+This week's goal was to dig deeper into the dataset's statistical structure and use those findings to explain *why* the Week 2 models behaved the way they did, rather than treating EDA as a separate exercise from the classification work.
+
+**Statistical summaries:** I computed mean, median, and skewness of `text_length` grouped by category. Skewness turned out to be the most revealing metric — most categories showed moderate right-skew (0.5–1.5), but `POLITICS` (5.04) and `THE WORLDPOST` (4.00) stood out with extreme skew, while `FIFTY` was essentially symmetric (-0.02) despite having the highest median length overall (303 words). This showed two distinct patterns hiding behind similar-looking summary stats: `POLITICS` has a tight cluster of typical articles plus a long tail of outliers, while `FIFTY` is just consistently longer-form content with no real outliers.
+
+**Boxplots:** I visualized text length distributions across categories to confirm this. `POLITICS` and `THE WORLDPOST` showed small, tight boxes but a dense cloud of outlier points reaching up to ~1,500 words, while `FIFTY` showed a taller box (wider typical range) with almost no outliers — proving that box size (typical spread) and outlier density (frequency of extreme values) are separate signals that can tell different stories about the same category.
+
+**Class imbalance:** Using `value_counts()` on `category`, I confirmed what the Week 2 confusion matrices had hinted at: `POLITICS` (32,436 articles) and `WELLNESS` (23,205) dominate the dataset, while categories like `LATINO VOICES` (1,022) and `GOOD NEWS` (1,039) have roughly 30x fewer samples. This directly explains Naive Bayes' bias toward over-predicting the high-frequency classes — with imbalanced priors and no strong mechanism to resist the shortcut, it defaults to the statistically "safe" high-frequency answer more often than Logistic Regression does.
+
+**Key influencing factor:** Category consistently influences article length and distribution shape — some categories (`POLITICS`, `THE WORLDPOST`) mix short news briefs with rare long-form pieces, others (`FIFTY`) are uniformly longer, and others (`WEIRD NEWS`, ~114 words median) run consistently short. This structural variation, combined with class imbalance, offers a data-level explanation for the classification patterns observed in Week 2 — not just a model-level one.
 
 **Files:** `ThiranexDataScience.ipynb`
